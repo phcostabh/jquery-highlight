@@ -55,9 +55,10 @@
     }
 }(function (jQuery) {
     jQuery.extend({
-        highlight: function (node, re, nodeName, className) {
+        highlight: function (node, re, nodeName, className, ignoreDiacritics) {
             if (node.nodeType === 3) {
-                var match = node.data.match(re);
+                var subject = ignoreDiacritics ? jQuery.removeDiacritcs(node.data) : node.data;
+                var match = subject.match(re);
                 if (match) {
                     var highlight = document.createElement(nodeName || 'span');
                     highlight.className = className || 'highlight';
@@ -72,10 +73,32 @@
                     !/(script|style)/i.test(node.tagName) && // ignore script and style nodes
                     !(node.tagName === nodeName.toUpperCase() && node.className === className)) { // skip if already highlighted
                 for (var i = 0; i < node.childNodes.length; i++) {
-                    i += jQuery.highlight(node.childNodes[i], re, nodeName, className);
+                    i += jQuery.highlight(node.childNodes[i], re, nodeName, className, ignoreDiacritics);
                 }
             }
             return 0;
+        },
+
+        removeDiacritcs: function (word) {
+			return word
+				.replace(/[\u00c0-\u00c6]/g, 'A')
+				.replace(/[\u00e0-\u00e6]/g, 'a')
+				.replace(/[\u00c7]/g, 'C')
+				.replace(/[\u00e7]/g, 'c')
+				.replace(/[\u00c8-\u00cb]/g, 'E')
+				.replace(/[\u00e8-\u00eb]/g, 'e')
+				.replace(/[\u00cc-\u00cf]/g, 'I')
+				.replace(/[\u00ec-\u00ef]/g, 'i')
+				.replace(/[\u00d1|\u0147]/g, 'N')
+				.replace(/[\u00f1|\u0148]/g, 'n')
+				.replace(/[\u00d2-\u00d8|\u0150]/g, 'O')
+				.replace(/[\u00f2-\u00f8|\u0151]/g, 'o')
+				.replace(/[\u0160]/g, 'S')
+				.replace(/[\u0161]/g, 's')
+				.replace(/[\u00d9-\u00dc]/g, 'U')
+				.replace(/[\u00f9-\u00fc]/g, 'u')
+				.replace(/[\u00dd]/g, 'Y')
+				.replace(/[\u00fd]/g, 'y');
         }
     });
 
@@ -83,7 +106,7 @@
         var settings = { className: 'highlight', element: 'span' };
         jQuery.extend(settings, options);
 
-        return this.find(settings.element + "." + settings.className).each(function () {
+        return this.find(settings.element + '.' + settings.className).each(function () {
             var parent = this.parentNode;
             parent.replaceChild(this.firstChild, this);
             parent.normalize();
@@ -91,29 +114,45 @@
     };
 
     jQuery.fn.highlight = function (words, options) {
-        var settings = { className: 'highlight', element: 'span', caseSensitive: false, wordsOnly: false };
+        var settings = {
+            className: 'highlight',
+            element: 'span',
+            caseSensitive: false,
+            wordsOnly: false,
+            ignoreDiacritics: false,
+        };
+
         jQuery.extend(settings, options);
-        
+
         if (words.constructor === String) {
             words = [words];
         }
-        words = jQuery.grep(words, function(word, i){
-          return word != '';
-        });
-        words = jQuery.map(words, function(word, i) {
-          return word.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
-        });
-        if (words.length == 0) { return this; };
 
-        var flag = settings.caseSensitive ? "" : "i";
-        var pattern = "(" + words.join("|") + ")";
+        words = jQuery.grep(words, function(word) {
+          return word !== '';
+        });
+
+        words = jQuery.map(words, function(word) {
+          if (settings.ignoreDiacritics) {
+              word = jQuery.removeDiacritcs(word);
+          }
+
+          return word.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+        });
+
+        if (words.length === 0) { return this; }
+
+        var flag = settings.caseSensitive ? '' : 'i';
+        var pattern = '(' + words.join('|') + ')';
+
         if (settings.wordsOnly) {
-            pattern = "\\b" + pattern + "\\b";
+            pattern = '\\b' + pattern + '\\b';
         }
+
         var re = new RegExp(pattern, flag);
-        
+
         return this.each(function () {
-            jQuery.highlight(this, re, settings.element, settings.className);
+            jQuery.highlight(this, re, settings.element, settings.className, settings.ignoreDiacritics);
         });
     };
 }));
