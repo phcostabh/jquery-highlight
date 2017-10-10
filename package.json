@@ -1,0 +1,23 @@
+{
+  "name": "jquery-highlight",
+  "version": "3.2.1",
+  "description": "jQuery.Highlight.js ===================",
+  "main": "jquery.highlight.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phcostabh/jquery-highlight.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/phcostabh/jquery-highlight/issues"
+  },
+  "homepage": "https://github.com/phcostabh/jquery-highlight#readme",
+  "dependencies": {
+    "jquery": "^2.2.4"
+  }
+}
